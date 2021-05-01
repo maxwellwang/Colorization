@@ -1,12 +1,11 @@
-from PIL import Image
-import matplotlib.pyplot as plt
-from numpy import asarray
+from PIL import Image as im
+import numpy as np
 from sklearn.cluster import KMeans
 
 
-def get_data(path):
-    img = Image.open(path)
-    return list(asarray(img))
+def get_data(path: str) -> list:
+    img = im.open(path)
+    return list(np.asarray(img))
 
 
 def split(data):
@@ -23,7 +22,7 @@ def cluster(train_data):
     for row in train_data:
         for pixel in row:
             flattened.append(pixel)
-    kmeans = KMeans(n_clusters=5, random_state=0).fit(asarray(flattened))
+    kmeans = KMeans(n_clusters=5, random_state=0).fit(np.asarray(flattened))
     centers = []
     for center in kmeans.cluster_centers_:
         centers.append([round(center[0]), round(center[1]), round(center[2])])
@@ -59,11 +58,5 @@ def get_gray_data(data):
 
 
 def show_image(data):
-    img = Image.fromarray(asarray(data), 'RGB')
+    img = im.fromarray(np.asarray(data).astype(np.uint8))
     img.show()
-
-
-def show_colors(colors):
-    for i, color in enumerate(colors):
-        plt.scatter(i + 1, 1, color=tuple([x / 255 for x in color]))
-    plt.show()

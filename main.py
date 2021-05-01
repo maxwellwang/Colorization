@@ -13,5 +13,4 @@ if __name__ == '__main__':
     # gray_data = get_gray_data(data)
     # split left side into train and right side into test
     # train_gray_data, test_gray_data = split(gray_data)
-    show_image(train_data)
     show_image(recolored_train_data)
