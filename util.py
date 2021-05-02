@@ -6,16 +6,23 @@ from sklearn.cluster import KMeans
 
 def get_data(path):
     img = open(path)
-    return list(asarray(img))
+    return asarray(img).tolist()
 
 
 def split(data):
-    train_data = []
-    test_data = []
+    left_data = []
+    right_data = []
     for row in data:
-        train_data.append(row[:round(len(row) / 2)])
-        test_data.append(row[round(len(row) / 2):])
-    return train_data, test_data
+        left_data.append(row[:round(len(row) / 2)])
+        right_data.append(row[round(len(row) / 2):])
+    return left_data, right_data
+
+
+def combine(left_data, right_data):
+    new_data = []
+    for i in range(len(left_data)):
+        new_data.append(left_data[i] + right_data[i])
+    return new_data
 
 
 def cluster(train_data):
@@ -60,6 +67,7 @@ def get_gray_data(data):
 
 def show_image(data):
     img = fromarray(asarray(data).astype(uint8))
+    img.save('basic_agent_result.jpg')
     img.show()
 
 
@@ -128,10 +136,3 @@ def color_in(test_gray_data, train_gray_data, recolored_train_data):
         colored_test_data.append(new_row)
         print(str(round(i / len(test_gray_data) * 100)) + '%')
     return colored_test_data
-
-
-def combine(left_data, right_data):
-    new_data = []
-    for i in range(len(left_data)):
-        new_data.append([left_data[i] + right_data[i]])
-    return new_data
