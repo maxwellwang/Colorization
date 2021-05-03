@@ -65,9 +65,9 @@ def get_gray_data(data):
     return gray_data
 
 
-def show_image(data):
+def show_image(data, savename):
     img = fromarray(asarray(data).astype(uint8))
-    img.save('basic_agent_result.jpg')
+    img.save(savename)
     img.show()
 
 
@@ -77,7 +77,7 @@ def similar_patches_locations(patch, train_gray_data):
     for i, row in enumerate(train_gray_data):
         for j, pixel in enumerate(row):
             if not (i == 0 or i == len(train_gray_data) - 1 or j == 0 or j == len(row) - 1):
-                a_patch = [train_gray_data[a][b] for b in [j - 1, j, j + 1] for a in [i - 1, i, i + 1]]
+                a_patch = [train_gray_data[a][b] for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]]
                 diff = sum(list(map(lambda a: abs(a[0] - a[1]), zip(patch, a_patch))))
                 if len(diffs_locations) < 6:
                     heappush(diffs_locations, (-diff, (i, j)))
@@ -128,11 +128,30 @@ def color_in(test_gray_data, train_gray_data, recolored_train_data):
             if i == 0 or i == len(test_gray_data) - 1 or j == 0 or j == len(row) - 1:
                 new_row.append([0, 0, 0])
             else:
-                patch = [test_gray_data[a][b] for b in [j - 1, j, j + 1] for a in [i - 1, i, i + 1]]
+                patch = [test_gray_data[a][b] for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]]
                 locations = similar_patches_locations(patch, train_gray_data)
                 colors = [recolored_train_data[i][j] for i, j in locations]
                 counts = frequencies(colors)
                 new_row.append(pick_color(counts, colors[-1]))  # location with min diff is at end of list
         colored_test_data.append(new_row)
-        print(str(round(i / len(test_gray_data) * 100)) + '%')
+        print(i / len(test_gray_data) * 100)
     return colored_test_data
+
+
+def get_X_y(gray_data, colored_data, rgb):
+    X, y = [], []
+    for i, row in enumerate(gray_data):
+        if i != 0 and i != len(gray_data) - 1:
+            for j, pixel in enumerate(row):
+                if j != 0 and j != len(row) - 1:
+                    X.append([round(gray_data[a][b] / 255, 2) for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]])
+                    y.append(round(colored_data[i][j][rgb] / 255, 2))
+    return X, y
+
+
+def model(X, y):
+    return []  # TODO
+
+
+def apply_models(gray_data, red_model, green_model, blue_model):
+    return []  # TODO
