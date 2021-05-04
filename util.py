@@ -1,7 +1,8 @@
+from random import randrange
 from PIL.Image import open, fromarray
 from numpy import asarray, uint8
 from heapq import heappop, heappush, heapify
-from sklearn.cluster import KMeans
+from statistics import mean
 
 
 def get_data(path):
@@ -25,15 +26,23 @@ def combine(left_data, right_data):
     return new_data
 
 
-def cluster(train_data):
+def representative_colors(data, num_colors):
     flattened = []
-    for row in train_data:
+    for row in data:
         for pixel in row:
             flattened.append(pixel)
-    kmeans = KMeans(n_clusters=5, random_state=0).fit(asarray(flattened))
-    centers = []
-    for center in kmeans.cluster_centers_:
-        centers.append([round(center[0]), round(center[1]), round(center[2])])
+    centers = [(randrange(256), randrange(256), randrange(256)) for _ in range(num_colors)]
+    prev_centers = []
+    while centers != prev_centers:
+        prev_centers = centers.copy()
+        clusters = [[] for _ in range(num_colors)]
+        for pixel in flattened:
+            diffs = [abs(pixel[0] - center[0]) + abs(pixel[1] - center[1]) + abs(pixel[2] - center[2]) for center in
+                     centers]
+            clusters[diffs.index(min(diffs))].append(pixel)
+        for i, cluster in enumerate(clusters):
+            centers[i] = (round(mean(map(lambda rgb: rgb[0], cluster))), round(mean(map(lambda rgb: rgb[1], cluster))),
+                          round(mean(map(lambda rgb: rgb[2], cluster))))
     return centers
 
 
@@ -48,9 +57,9 @@ def closest_color(pixel, five_colors):
     return closest
 
 
-def recolor(train_data, five_colors):
+def simplify_colors(data, five_colors):
     recolored = []
-    for row in train_data:
+    for row in data:
         recolored.append([closest_color(pixel, five_colors) for pixel in row])
     return recolored
 
@@ -65,19 +74,19 @@ def get_gray_data(data):
     return gray_data
 
 
-def show_image(data, savename):
+def to_image(data, savename):
     img = fromarray(asarray(data).astype(uint8))
     img.save(savename)
     img.show()
 
 
-def similar_patches_locations(patch, train_gray_data):
+def similar_patches_locations(patch, gray_train_data):
     diffs_locations = []
     heapify(diffs_locations)
-    for i, row in enumerate(train_gray_data):
+    for i, row in enumerate(gray_train_data):
         for j, pixel in enumerate(row):
-            if not (i == 0 or i == len(train_gray_data) - 1 or j == 0 or j == len(row) - 1):
-                a_patch = [train_gray_data[a][b] for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]]
+            if not (i == 0 or i == len(gray_train_data) - 1 or j == 0 or j == len(row) - 1):
+                a_patch = [gray_train_data[a][b] for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]]
                 diff = sum(list(map(lambda a: abs(a[0] - a[1]), zip(patch, a_patch))))
                 if len(diffs_locations) < 6:
                     heappush(diffs_locations, (-diff, (i, j)))
@@ -120,7 +129,7 @@ def pick_color(counts, tiebreaker):
     return list(best_color)
 
 
-def color_in(test_gray_data, train_gray_data, recolored_train_data):
+def basic_coloring(test_gray_data, train_gray_data, recolored_train_data):
     colored_test_data = []
     for i, row in enumerate(test_gray_data):
         new_row = []
@@ -138,7 +147,7 @@ def color_in(test_gray_data, train_gray_data, recolored_train_data):
     return colored_test_data
 
 
-def get_X_y(gray_data, colored_data, rgb):
+def get_data_for_regression(gray_data, colored_data, rgb):
     X, y = [], []
     for i, row in enumerate(gray_data):
         if i != 0 and i != len(gray_data) - 1:
@@ -149,9 +158,9 @@ def get_X_y(gray_data, colored_data, rgb):
     return X, y
 
 
-def model(X, y):
+def find_weights(X, y):
     return []  # TODO
 
 
-def apply_models(gray_data, red_model, green_model, blue_model):
+def improved_coloring(gray_data, red_model, green_model, blue_model):
     return []  # TODO
