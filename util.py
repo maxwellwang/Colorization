@@ -171,25 +171,37 @@ def f(data, weights):
 
 
 def loss(f, weights, data):
+    # Calculate the average loss for some particular weight: sum  of (f_w(x) - y)^2
     a = [math.pow(f(x, weights) - y, 2) for x, y in data]
     return sum(a) / len(a)
 
 
 def grad(f, weights, dp, res):
-    return sum([(f(dp, weights) - res) * dp])
+    # Computes the coefficient of the gradient: (f_w(x) - y)
+    return f(dp, weights) - res
 
 
 def find_weights(X, y):
+    # Weights start at 0
     weights = np.zeros(11)
     X = np.array(X)
-    alpha = 0.0005
-    batch = 200
-    for i in range(5000):
+    # Learning rate as 0.0005
+    alpha = 0.0003
+    # Batch size of 200 samples
+    batch = 300
+    # Do 5000 steps
+    for i in range(25000):
+        # Choose a batch of samples
         idxs = [random.randrange(len(X)) for _ in range(batch)]
+        # This will be the new weight
         gradient = weights[:]
+        # For every data point in the batch we have selected
         for dp, res in zip([X[idx] for idx in idxs], [y[idx] for idx in idxs]):
+            # Subtract the gradient, one data point at a time: w = w - alpha * (f_w(x) - y) * x
             gradient -= alpha * grad(f, weights, dp, res) * dp
         weights = gradient
+        if i % 1000 == 0:
+            print("Loss: " + str(loss(f, weights, zip(X, y))))
     print("Loss: " + str(loss(f, weights, zip(X, y))))
 
     return weights
@@ -203,6 +215,7 @@ def improved_coloring(gray_data, red_model, green_model, blue_model):
             if i == 0 or i == len(gray_data) - 1 or j == 0 or j == len(row) - 1:
                 color.extend([0, 0, 0])
             else:
+                # Generate the input space data
                 it = zip([0, 0, 0, -1, 1], [0, -1, 1, 0, 0])
                 X_temp = []
                 X_temp.append(1)
@@ -210,6 +223,7 @@ def improved_coloring(gray_data, red_model, green_model, blue_model):
                     X_temp.append(gray_data[i + di][j + dj] / 255)
                     X_temp.append(math.pow(gray_data[i + di][j + dj] / 255, 3))
 
+                # Apply the model with the trained weights and clamp the value between 0 and 255
                 color.append(min(max(f(X_temp, red_model) * 255, 0), 255))
                 color.append(min(max(f(X_temp, green_model) * 255, 0), 255))
                 color.append(min(max(f(X_temp, blue_model) * 255, 0), 255))

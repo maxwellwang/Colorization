@@ -48,5 +48,5 @@ def improved_agent(filename, savename):
 
 
 if __name__ == '__main__':
-    basic_agent('mountain.jpg', 'basic_agent_result.jpg')
-    # improved_agent('cherry.jpg', 'improved_agent_result.jpg')
+    # basic_agent('cherry.jpg', 'basic_cherry.jpg')
+    improved_agent('mountain.png', 'improved_mountain_f.png')
