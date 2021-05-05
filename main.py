@@ -18,7 +18,7 @@ def basic_agent(filename, savename):
     # recolored train data
     colored_test_data = basic_coloring(gray_test_data, gray_train_data, recolored_train_data)
     # combine recolored train data with newly colored in test data
-    final_data = combine(recolored_train_data, colored_test_data)
+    final_data = combine(train_data, colored_test_data)
     to_image(final_data, savename)
 
 
@@ -40,10 +40,13 @@ def improved_agent(filename, savename):
     green_model = find_weights(green_X, green_y)
     blue_model = find_weights(blue_X, blue_y)
     # apply the models to the data
-    final_data = improved_coloring(gray_data, red_model, green_model, blue_model)
-    to_image(final_data, savename)
+    final_data = improved_coloring(gray_test_data, red_model, green_model, blue_model)
+    to_image(combine(train_data, final_data), savename)
+    # print(red_model)
+    # print(green_model)
+    # print(blue_model)
 
 
 if __name__ == '__main__':
-    basic_agent('cherry.jpg', 'basic_agent_result.jpg')
+    basic_agent('mountain.jpg', 'basic_agent_result.jpg')
     # improved_agent('cherry.jpg', 'improved_agent_result.jpg')

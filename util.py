@@ -1,9 +1,11 @@
 from random import randrange
 from PIL.Image import open, fromarray
 from numpy import asarray, uint8
+import numpy as np
 from heapq import heappop, heappush, heapify
 from statistics import mean
-
+import random
+import math
 
 def get_data(path):
     img = open(path)
@@ -22,7 +24,7 @@ def split(data):
 def combine(left_data, right_data):
     new_data = []
     for i in range(len(left_data)):
-        new_data.append(left_data[i] + right_data[i])
+        new_data.append((np.concatenate((np.array(left_data[i]), np.array(right_data[i])))))
     return new_data
 
 
@@ -153,14 +155,64 @@ def get_data_for_regression(gray_data, colored_data, rgb):
         if i != 0 and i != len(gray_data) - 1:
             for j, pixel in enumerate(row):
                 if j != 0 and j != len(row) - 1:
-                    X.append([round(gray_data[a][b] / 255, 2) for a in [i - 1, i, i + 1] for b in [j - 1, j, j + 1]])
-                    y.append(round(colored_data[i][j][rgb] / 255, 2))
+                    it = zip([0, 0, 0, -1, 1], [0, -1, 1, 0, 0])
+                    X_temp = []
+                    X_temp.append(1)
+                    for di, dj in it:
+                        X_temp.append(gray_data[i + di][j + dj] / 255)
+                        X_temp.append(math.pow(gray_data[i + di][j + dj] / 255, 2))
+                    X.append(X_temp)
+                    y.append(colored_data[i][j][rgb] / 255)
     return X, y
 
 
+def f(data, weights):
+    return np.dot(data, weights)
+
+
+def loss(f, weights, data):
+    a = [math.pow(f(x, weights) - y, 2) for x, y in data]
+    return sum(a) / len(a)
+
+
+def grad(f, weights, dp, res):
+    return sum([(f(dp, weights) - res) * dp])
+
+
 def find_weights(X, y):
-    return []  # TODO
+    weights = np.zeros(11)
+    X = np.array(X)
+    alpha = 0.0005
+    batch = 200
+    for i in range(5000):
+        idxs = [random.randrange(len(X)) for _ in range(batch)]
+        gradient = weights[:]
+        for dp, res in zip([X[idx] for idx in idxs], [y[idx] for idx in idxs]):
+            gradient -= alpha * grad(f, weights, dp, res) * dp
+        weights = gradient
+    print("Loss: " + str(loss(f, weights, zip(X, y))))
+
+    return weights
 
 
 def improved_coloring(gray_data, red_model, green_model, blue_model):
-    return []  # TODO
+    gray_data = np.array(gray_data)
+    color = []
+    for i, row in enumerate(gray_data):
+        for j, pixel in enumerate(row):
+            if i == 0 or i == len(gray_data) - 1 or j == 0 or j == len(row) - 1:
+                color.extend([0, 0, 0])
+            else:
+                it = zip([0, 0, 0, -1, 1], [0, -1, 1, 0, 0])
+                X_temp = []
+                X_temp.append(1)
+                for di, dj in it:
+                    X_temp.append(gray_data[i + di][j + dj] / 255)
+                    X_temp.append(math.pow(gray_data[i + di][j + dj] / 255, 3))
+
+                color.append(min(max(f(X_temp, red_model) * 255, 0), 255))
+                color.append(min(max(f(X_temp, green_model) * 255, 0), 255))
+                color.append(min(max(f(X_temp, blue_model) * 255, 0), 255))
+
+    color = np.array(color).reshape(len(gray_data), len(gray_data[0]), 3)
+    return color
